@@ -14,13 +14,29 @@ let select_VV, head_table, empty_row, t_row; //элементы поиска и 
 
 function create_select_GM_3() {
     if (select_VV) return; //чтобы не создавать повторно
-    select_VV = create_select_search(EXPLOSIVE_NAMES, parent_select_sprVV.clientWidth);
-    parent_select_sprVV.append(select_VV)
+    
+    // Проверяем, загружены ли данные
+    if (!EXPLOSIVE_NAMES) {
+        console.warn('Данные EXPLOSIVE_NAMES еще не загружены');
+        return;
+    }
+    
+    // Проверяем существование DOM элементов
+    const parent = document.getElementById('parent_select_sprVV');
+    const rowTitle = document.getElementById('row_title_for_VV');
+    
+    if (!parent || !rowTitle) {
+        console.error('DOM элементы для кадра 3 не найдены');
+        return;
+    }
+    
+    select_VV = create_select_search(EXPLOSIVE_NAMES, parent.clientWidth);
+    parent.append(select_VV)
 
     //находим пустую строку
-    head_table = row_title_for_VV.querySelectorAll('div.col-md-9')[0]  //первая строка таблицы с названиями столбцов
+    head_table = rowTitle.querySelectorAll('div.col-md-9')[0]  //первая строка таблицы с названиями столбцов
 
-    empty_row = row_title_for_VV.querySelectorAll('div.col-md-9')[1]
+    empty_row = rowTitle.querySelectorAll('div.col-md-9')[1]
     t_row = empty_row.cloneNode(true)
 
     //кнопка добавить выбранные или пользовательские ГМ
