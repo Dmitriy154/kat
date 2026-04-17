@@ -31,6 +31,9 @@ function init_stage(param = true) {             //эту функцию запу
 
 
 //простая функция отображения кадра + доп. параметры : num - id кадра (k_1) ! Не строка
+let gmDataLoading = false;  // флаг загрузки данных
+let gmDataLoaded = false;   // флаг успешной загрузки данных
+
 function goto (k_id) {
 	
 	init_kadr(k_id) //инит запускаем после очистки!??? а если нужно сохранить данные
@@ -40,36 +43,73 @@ function goto (k_id) {
 	if (current_gm !== undefined && gm) gm.textContent = current_gm[0] 
 
 	if (k_id == k_2) {
-		btn_k2_next.disabled = true;
-		btn_k2_next.innerHTML = 'Загрузка...';
+		// Если данные уже загружены, просто активируем кнопку
+		if (gmDataLoaded) {
+			btn_k2_next.disabled = false;
+			btn_k2_next.innerHTML = 'Далее &gt;';
+		} 
+		// Если идет загрузка, кнопка остается заблокированной с сообщением
+		else if (gmDataLoading) {
+			btn_k2_next.disabled = true;
+			btn_k2_next.innerHTML = 'Загрузка данных...';
+		}
+		// Если загрузка еще не началась, запускаем её
+		else {
+			btn_k2_next.disabled = true;
+			btn_k2_next.innerHTML = 'Загрузка...';
+			gmDataLoading = true;
 
-		loadGmData().then(() => {
-			btn_k2_next.disabled = false;
-			btn_k2_next.innerHTML = 'Далее &gt;';			
-		}).catch(err => {
-			console.error('Ошибка загрузки GM:', err);
-			btn_k2_next.disabled = false;
-			btn_k2_next.innerHTML = 'Далее &gt;';	
-			alert('Ошибка загрузки данных, вы можете продолжить расчет без справочных данных. Сообщиете администратору об ошибке, спасибо!');
-		});
+			loadGmData().then(() => {
+				gmDataLoading = false;
+				gmDataLoaded = true;
+				btn_k2_next.disabled = false;
+				btn_k2_next.innerHTML = 'Далее &gt;';
+				// Уведомляем пользователя, что данные загружены
+				console.log('Данные загружены, кнопка "Далее" активирована');
+			}).catch(err => {
+				console.error('Ошибка загрузки GM:', err);
+				gmDataLoading = false;
+				btn_k2_next.disabled = false;
+				btn_k2_next.innerHTML = 'Далее &gt;';
+				alert('Ошибка загрузки данных, вы можете продолжить расчет без справочных данных. Сообщиете администратору об ошибке, спасибо!');
+			});
+		}
 	}
 
+	// Обработка перехода к кадру 3
 	if (k_id == k_3) {
-		//очищаем текущее вещество
-		current_gm = null
+		// Проверяем, идет ли еще загрузка данных
+		if (gmDataLoading) {
+			alert('Данные еще загружаются. Пожалуйста, подождите немного и нажмите кнопку "Далее" снова.');
+			// Возвращаемся обратно на кадр 2
+			goto(k_2);
+			return;
+		}
 		
-		// Проверяем, загружены ли данные перед созданием select
-		if (!EXPLOSIVE_NAMES) {
-			console.warn('Данные EXPLOSIVE_NAMES еще не загружены, загружаем...');
+		// Если данные не загружены и не грузятся, пробуем загрузить
+		if (!gmDataLoaded) {
+			btn_k2_next.disabled = true;
+			btn_k2_next.innerHTML = 'Загрузка...';
+			gmDataLoading = true;
+
 			loadGmData().then(() => {
+				gmDataLoading = false;
+				gmDataLoaded = true;
+				// После загрузки переходим к кадру 3
 				create_select_GM_3();
 			}).catch(err => {
 				console.error('Ошибка загрузки данных для кадра 3:', err);
+				gmDataLoading = false;
 				alert('Ошибка загрузки справочных данных. Попробуйте перезагрузить страницу.');
+				goto(k_2);
+				return;
 			});
-		} else {
-			create_select_GM_3();
+			return;
 		}
+
+		// Очищаем текущее вещество
+		current_gm = null
+		create_select_GM_3();
 	}
 
 	if (k_id == k_4) {
