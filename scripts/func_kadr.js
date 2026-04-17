@@ -1,9 +1,22 @@
 //  КАДР 2. расчет площади и объема помещения
+let gmDataLoading = false; // флаг загрузки данных
+
 function k_2_calc_v () {    //кнопка "Расчитать" - расчитываем объем и свободный объем помещения
     calc(pom_S, 'pom_l*pom_w' )
     calc(pom_V, 'pom_l*pom_w*pom_h')
     calc(pom_svV, 'pom_V*pom_svV_pr/100')
     saveInputs([pom_l, pom_w, pom_h, pom_svV_pr], [pom_S, pom_V, pom_svV]) //после вып. расчета, если скорректировать параметр, то очистятся все поля
+    
+    // Начинаем загрузку данных при нажатии "Рассчитать"
+    if (!gmDataLoading && !GM) {
+        gmDataLoading = true;
+        loadGmData().then(() => {
+            console.log('Данные загружены');
+        }).catch(err => {
+            console.error('Ошибка загрузки данных:', err);
+            alert('Ошибка загрузки справочных данных. Продолжите расчет без них.');
+        });
+    }
 }
 
 

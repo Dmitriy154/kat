@@ -43,16 +43,22 @@ function goto (k_id) {
 		btn_k2_next.disabled = true;
 		btn_k2_next.innerHTML = 'Загрузка...';
 
-		loadGmData().then(() => {
-			btn_k2_next.disabled = false;
-			btn_k2_next.innerHTML = 'Далее &gt;';			
+		// Проверяем, не началась ли загрузка уже при нажатии "Рассчитать"
+		if (!GM) {
+			loadGmData().then(() => {
+				btn_k2_next.disabled = false;
+				btn_k2_next.innerHTML = 'Далее &gt;';			
 			}).catch(err => {
 				console.error('Ошибка загрузки GM:', err);
 				btn_k2_next.disabled = false;
 				btn_k2_next.innerHTML = 'Далее &gt;';	
 				alert('Ошибка загрузки данных, вы можете продолжить расчет без справочных данных. Сообщиете администратору об ошибке, спасибо!');
-			}
-		);
+			});
+		} else {
+			// Данные уже загружены
+			btn_k2_next.disabled = false;
+			btn_k2_next.innerHTML = 'Далее &gt;';
+		}
 	}
 
 	if (k_id == k_3) {
