@@ -58,8 +58,19 @@ function goto (k_id) {
 	if (k_id == k_3) {
 		//очищаем текущее вещество
 		current_gm = null
-		// Сначала загружаем данные
-		create_select_GM_3(); //имеется защита от повторного создания и загрузки
+		
+		// Проверяем, загружены ли данные перед созданием select
+		if (!EXPLOSIVE_NAMES) {
+			console.warn('Данные EXPLOSIVE_NAMES еще не загружены, загружаем...');
+			loadGmData().then(() => {
+				create_select_GM_3();
+			}).catch(err => {
+				console.error('Ошибка загрузки данных для кадра 3:', err);
+				alert('Ошибка загрузки справочных данных. Попробуйте перезагрузить страницу.');
+			});
+		} else {
+			create_select_GM_3();
+		}
 	}
 
 	if (k_id == k_4) {
