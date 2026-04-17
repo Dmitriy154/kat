@@ -46,13 +46,12 @@ function goto (k_id) {
 		loadGmData().then(() => {
 			btn_k2_next.disabled = false;
 			btn_k2_next.innerHTML = 'Далее &gt;';			
-			}).catch(err => {
-				console.error('Ошибка загрузки GM:', err);
-				btn_k2_next.disabled = false;
-				btn_k2_next.innerHTML = 'Далее &gt;';	
-				alert('Ошибка загрузки данных, вы можете продолжить расчет без справочных данных. Сообщиете администратору об ошибке, спасибо!');
-			}
-		);
+		}).catch(err => {
+			console.error('Ошибка загрузки GM:', err);
+			btn_k2_next.disabled = false;
+			btn_k2_next.innerHTML = 'Далее &gt;';	
+			alert('Ошибка загрузки данных, вы можете продолжить расчет без справочных данных. Сообщиете администратору об ошибке, спасибо!');
+		});
 	}
 
 	if (k_id == k_3) {
