@@ -81,6 +81,29 @@ function del_row_in_table_gm(row){
     }
 }
 
+
+function check_table_type() {
+    // Находим все селекты внутри таблицы в текущий момент
+    const selects = document.querySelectorAll('#row_title_for_VV select');
+    let empty = false
+
+    // Проверяем, есть ли хотя бы один с дефолтным значением "0"
+    for (const select of selects) {
+        if (select.value === '0') {
+            animateInput(select, 'red', 3000)
+            empty = true; // Возвращаем false, чтобы можно было прервать отправку формы или действие
+        }
+    }
+
+    if (empty) {
+        alert('Ошибка: Выберите тип ГМ во всех строках таблицы!');
+        return false;
+    }
+    return true; // Все селекты заполнены корректно
+}
+
+
+
 //КАДР 4_1 и 4_2 расчет плотности газа или пара при расчетной температуре
 // calc(k4_as1_m_res, '0.01*av_gg_1_p*av_gg_1_v*av_gg_1_ro', data.vent_kf) или  calc(pom_svV, 'pom_V*pom_svV_pr/100') или ! calc(av_gj_5_ng,`${result}+0*av_gj_5_u`)
 
@@ -224,18 +247,21 @@ function calc_dop_par(row){
 
     goto(k_8) // внимание: вначале назначаем current_gm, а потом запускаем goto (с init), чтобы ссылаться и вставлять данные из БД!
 
-    let id = current_gm[1] //переработать
-    let type = current_gm[9]
-
+    let id = ''
+    let type = current_gm[9]    //'лвж' для ацетона
     let v = ''      // вид вещества
 
+    if (current_gm[1] != null) {
+        id = current_gm[1] //id базы данных старой и соответствует записи note в БД, для ацетона '1183'
+    }
+          
     if (id === '0') {           //  в формуле недопустимые элементы, по формуле 2 (как для смеси)
-        v = '0'                 
-    } else if (id === 's') {    // смесь (бензин ....)
+        v = '0'  
+    } else if (id.includes('*')) {   // смесь с долями (эмали ...)
+        v= 'sd'
+    } else if (id === 's') {    // смесь (бензин, диз.топлива, керосин, .... мало записей почти это все)
         v = 's'                 
-    } else if (id === 'sd') {   // смесь с долями (эмали ...)
-        v= 'sd'                                 
-    } else if (/^\d+$/.test(id) && parseInt(id) > 0) {  // индивидуальное вещество , по формуле 1
+    } else if (/^[1-9]\d*$/.test(id)) {  // индивидуальное вещество , по формуле 1
         v = 'i'                 
     } else {
         v = 'p'
@@ -245,71 +271,92 @@ function calc_dop_par(row){
     let blocks = [block_k8_radio, block_k8_M, block_k8_p, block_k8_ct, block_k8_h, block_k8_tv, block_k8_f, block_k8_z]
     blocks.forEach(block => block.hidden = true)
 
-
     if (type == 'гп') {         // для пыли
             // отображаем f и H_tp,
             block_k8_h.hidden = false
             block_k8_f.hidden = false
     } else {                    // для ГГ, ЛВЖ, ГЖ   блок с выбором инд. вещества
-        if (type == 'лвж') {
-            //отображаем темп-ру вспышки для ЛВЖ (для отнесения к кат А или Б)
+        if (type == 'лвж' && !block_k8_radio.hidden) {
+            //отображаем темп-ру вспышки для ЛВЖ (для отнесения к кат А или Б), а для ГЖ не требуется (!)
             block_k8_tv.hidden = false  
         }
 
-
         if (v == 'i') {
-            btn_k8_change('i')        //отображаем список для индивидуального вещества
+            btn_k8_change('i')        //отображаем список для индивидуального вещества 
         } else if(v == '0' || v == 's'){
             btn_k8_change('o')        //отображаем список как для остаьных веществ (пыли, технич. жидкости ...)
         } else if (v == 'sd') {      
-            // отдельная история !!!!!. Смеси, отдельный кадр?
-        } else if (v == 'p' || v == 't') {   //остальные вещества (пользовательские или только с H)
+            btn_k8_change('sd')
+        } else if (v == 'p') {   //остальные вещества (пользовательские или только с H)
+            console.log('вещество p или t')
             block_k8_radio.hidden = false   //отображаем вопрос с выбором инд. или смесь для пользовательского в-ва
+            block_k8_btns.hidden = true //скрываем основные кнопки
         }
     }
 
-
 }
 
-
+//кнопка далее при выборе определенного radio
+function btn_next_k8_radio() {
+    if (k8_ind_vvo.checked) {
+        btn_k8_change ('i')
+    } else if (k8_vvo_smes.checked) {
+        btn_k8_change ('sd')
+    } else if (k8_vvo_other.checked) {
+        btn_k8_change ('o')
+    } else {
+        alert('Сделайте выбор...')
+        return
+    }
+    block_k8_btns.hidden = false
+    block_k8_radio.hidden = true    
+}
 
 //выбирем индивидуальное вещество или смесь для вещества из БД (!) или после выполненного выбора между смесью и инд. веществом
 function btn_k8_change (k) {
+    //скрываем все блоки для открытия необходимых, кроме кнопок далее и назад
+    [block_k8_M, block_k8_p, block_k8_ct, block_k8_h, block_k8_f].forEach(block => block.hidden = true)
 
-    if (k == 'i') {       //для индивидуальных веществ отображаем  P_max, M, Cст
+    if (k == 'i') {       //для индивидуальных веществ отображаем  P_max, M, Cст  (ФОРМУЛА 1)
         block_k8_p.hidden = false       // P_max (13)
         block_k8_M.hidden = false       // M (4)
         block_k8_ct.hidden = false       // Cст (3)
 
-    } else if (k == 's') {            //для смесевых композиций
+    } else if (k == 'o') { //для технических жидкостей и пылей (ФОРМУЛА 2)
+        block_k8_h.hidden = false       // 
+       
+    } else if (k == 'sd') {
+        // отдельная история !!!!!. Смеси, отдельный кадр?
         //переходим к кадру 9
-        goto(k_9)
+        /////////////////////////////////// вот тут работаем по долям!!!
+        goto(k_9) // сделать без перехода!!??
         console.log(current_gm)
-
-    } else if (k == 'o') { //для технических жидкостей и пылей
-        block_k8_h.hidden = false       // H
     }
+   
+    if (current_gm[9] == 'лвж') block_k8_tv.hidden = false
 
-    block_k8_radio.hidden = true 
     block_k8_z.hidden = false 
-
 }
+
 
 
 //кнопка Далее для кадра 8 или действя после выбора инд. или смеси для пользов.вещества и с теплотой сгорания
 function btn_next_k8() {
     if (block_k8_radio.hidden) { // кнопка далее после ввода всех данных
-        // переход и заполение в кадре 7: избыточное давление взрыва
+        // переход и заполение (проверка) в кадре 7: избыточное давление взрыва
 
         //сохранение промежуточных данных для инициализации (!) табл. в кадре 7 по давлению....
 
         goto(k_7)
-    } else {    //нажатие при видимом окне выбора индивидуального в-ва или смеси, промежуточная кнопка Далее
-        if (k8_ind_vvo.checked) btn_k8_change('i')
-        if (k8_vvo_smes.checked) btn_k8_change('s')
-        if (k8_vvo_other.checked) btn_k8_change('o')
+    } else {    //нажатие при видимом окне выбора индивидуального в-ва или смеси, промежуточная кнопка Далее ????????????? УБРАТЬ!!!!!!! 
+            if (k8_ind_vvo.checked) btn_k8_change('i')
+            if (k8_vvo_smes.checked) btn_k8_change('s')
+            if (k8_vvo_other.checked) btn_k8_change('o')
     }
 }
+
+
+
 
 
 

@@ -727,18 +727,8 @@ btn_6_calc_M.onclick = ()=> {
 
 
 
-
-
-
-
-
-
 //k_8 РАСЧЕТ ДОПОЛНИТЕЛЬНЫХ ПАРАМЕТРОВ
 //k_8 данные графика, полученные программой https://datathief.org
-
-//делаем выбор на смеси (чтобы исчезло максимально давление взрыва)
-k8_vvo_smes.checked = true
-
 btn_k8_calc_ct.onclick = ()=> {
     let modal = createModal ('Определение стехиометрической концентрации ГГ или паров ЛВЖ, ГЖ', modal_8_ct)
     init_kadr(modal);
@@ -765,10 +755,11 @@ const data_z_b2 = {
 
 
 //k_9 ВВОД компонентов в составе смеси
-/* 
-let select_VV_komp = create_select_search(arr_name) //строка поиска компонента из массива БД
 
-div_seach_vv_komp.append(select_VV_komp)
+const parent_komp = document.getElementById('div_seach_vv_komp');
+
+let select_VV_komp = create_select_search(EXPLOSIVE_NAMES, parent_komp.clientWidth) //строка поиска компонента из массива БД
+parent_komp.append(select_VV_komp)
 
 //находим пустую строку
 let head_table_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[0]  //первая строка таблицы с названиями столбцов
@@ -832,8 +823,6 @@ function add_gm_in_table_komp(arr) {
 } 
 
 
-//763
-*/
 
  
 

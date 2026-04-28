@@ -138,7 +138,7 @@ function create_select_search(explosiveNames, _width) {
     _inp.placeholder = 'наименование вещества';
 
     // === Вспомогательная функция: Обновление видимости контейнера ===
-    // ✅ ГЛАВНОЕ ИСПРАВЛЕНИЕ: Скрывает весь блок, если нет выбранных И нет поиска
+    // Скрывает весь блок, если нет выбранных И нет поиска
     function updateContainerVisibility() {
         const hasSelected = div_sel.children.length > 0;
         const hasSearch = !div_change.hidden && div_change.children.length > 0;
@@ -194,8 +194,6 @@ function create_select_search(explosiveNames, _width) {
 
     // ✅ Обработчик кнопки «Добавить» — скрываем подсказки после добавления
     btn_add_VM.onclick = (e) => {
-        // 🔄 Здесь ваша существующая логика добавления вещества
-        
         hideSuggestions(); // ✅ Скрываем подсказки после клика по кнопке
     };
 
@@ -997,4 +995,3 @@ async function loadGmData() {
     GM = await gmRes.json();
     EXPLOSIVE_NAMES = await namesRes.json();
 }
-
