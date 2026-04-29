@@ -758,19 +758,29 @@ const data_z_b2 = {
 
 const parent_komp = document.getElementById('div_seach_vv_komp');
 
-let select_VV_komp = create_select_search(EXPLOSIVE_NAMES, parent_komp.clientWidth) //строка поиска компонента из массива БД
-parent_komp.append(select_VV_komp)
+// Создаем select только после загрузки данных
+let select_VV_komp = null;
 
-//находим пустую строку
-let head_table_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[0]  //первая строка таблицы с названиями столбцов
-let empty_row_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[1]
-
-let t_row_komp = empty_row_komp.cloneNode(true)
-
-//кнопка добавить выбранные или пользовательские компоненты
-let btn_add_gm_komp = select_VV_komp.querySelector('button')
-
-btn_add_gm_komp.onclick = ()=> {
+function initSelectKomp() {
+    if (!EXPLOSIVE_NAMES || !Array.isArray(EXPLOSIVE_NAMES)) {
+        console.warn('EXPLOSIVE_NAMES еще не загружены, откладываем инициализацию');
+        setTimeout(initSelectKomp, 100);
+        return;
+    }
+    
+    select_VV_komp = create_select_search(EXPLOSIVE_NAMES, parent_komp.clientWidth);
+    parent_komp.append(select_VV_komp);
+    
+    //находим пустую строку
+    let head_table_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[0];
+    let empty_row_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[1];
+    
+    let t_row_komp = empty_row_komp.cloneNode(true);
+    
+    //кнопка добавить выбранные или пользовательские компоненты
+    let btn_add_gm_komp = select_VV_komp.querySelector('button');
+    
+    btn_add_gm_komp.onclick = ()=> {
     alert('нажата кнопка добавление компонента!')
     let div_sel = select_VV_komp.querySelector('div.mark_element')  //div с выбранными элементами
     

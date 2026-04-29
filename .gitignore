@@ -1,1 +1,1 @@
-scripts/nav.js
+Nothing needs to be added to .gitignore since only JavaScript source files were modified and no build artifacts, dependencies, or temporary files are present in the changes.
