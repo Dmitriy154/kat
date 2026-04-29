@@ -141,6 +141,13 @@ function goto (k_id) {
 		console.log('переход к кадру 8')
 	}
 
+	// Инициализация поиска для кадра 9 при переходе на него
+	if (k_id == k_9) {
+		if (typeof initSelectKomp === 'function') {
+			initSelectKomp();
+		}
+	}
+
 
 	for (let k of k_i) { //скрываем все кадры, кроме необходимого
 		k.hidden = true
