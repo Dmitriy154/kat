@@ -806,6 +806,7 @@ function initSelectKomp() {
     for (var i = div_sel.children.length - 1; i >= 0; i--) {
         div_sel.children[i].querySelector('input').click()
     }
+    }
 }
 
 
