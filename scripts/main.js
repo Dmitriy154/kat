@@ -77,7 +77,7 @@ document.head.appendChild(style)
 
 //внимание! если передаем массив, значит в нем уже вещества из БД, если одно в-во, то или пользовательское или из БД
 function add_gm_in_table(arr) {
-    arr_GM_vz.length = 0
+    let arr_add_gm =[] //массив добавляемых взрывоопасных веществ
     let user_gm = false
     empty_row.hidden = true //скрываем первую пустую строку
 
@@ -121,19 +121,22 @@ function add_gm_in_table(arr) {
                 const compressed = GM.find(innerArray => innerArray[0] === name);
                 if (compressed) {
                     const full = decompressSubstance(compressed); // ← раскодируем!
+                    arr_add_gm.push(full);
                     arr_GM_vz.push(full);
                 }
             } 
         }
     })
-    add_row_in_table(arr_GM_vz)  //добавляем строку в таблицу, обходя массив
+    add_row_in_table(arr_add_gm)  //добавляем строку в таблицу, обходя массив
 } 
 
 //дополнение функции add_gm_in_table
 function add_row_in_table (arr) {
 
     arr.forEach(gm => {
+
         let new_row = t_row.cloneNode(true)
+        console.log('new')
         row_title_for_VV.append(new_row)
         new_row.querySelector('div.name').textContent = gm[0]
 
@@ -778,9 +781,7 @@ function initSelectKomp() {
     let btn_add_gm_komp = select_VV_komp.querySelector('button');
     
     btn_add_gm_komp.onclick = ()=> {
-        alert('нажата кнопка добавление компонента!')
-        let div_sel = select_VV_komp.querySelector('div.mark_element')  //div с выбранными элементами
-        
+        let div_sel = select_VV_komp.querySelector('div.mark_element')  //div с выбранными элементами   
         let arr = [] //массив имен выбранных веществ
 
         if(div_sel.children.length) { 			//если есть выбранные элементы
@@ -810,8 +811,8 @@ function initSelectKomp() {
 
 //передаем массив имен arr. функция формирует необходимые для добавления массив
 function add_gm_in_table_komp(arr) {
+    let arr_add_gm_komp = []
     let user_gm = false
-    arr_GM_komp.length = 0
     empty_row_komp.hidden = true //скрываем первую пустую строку
 
 
@@ -837,13 +838,14 @@ function add_gm_in_table_komp(arr) {
                 const compressed = GM.find(innerArray => innerArray[0] === name);
                 if (compressed) {
                     const full = decompressSubstance(compressed); // ← раскодируем!
+                    arr_add_gm_komp.push(full);
                     arr_GM_komp.push(full);
                 }
             } 
         }
     })    
     
-    add_row_in_table_9(arr_GM_komp)  //добавляем строку в таблицу кадра 9, обходя массив
+    add_row_in_table_9(arr_add_gm_komp)  //добавляем строку в таблицу кадра 9, обходя массив
 } 
 
     
@@ -860,10 +862,7 @@ function add_row_in_table_9 (arr) {
         gm.mass_dolya = new_row.querySelector('input.dolya')
         gm.mol_massa = new_row.querySelector('input.init')
         gm.p_np = new_row.querySelector('input.p_np')
-        
-        //ссылка на input в таблице с массой
-        gm.inp_massa = inp_massa
-        
+
         let btn = new_row.querySelector('button')
         //btn.addEventListener('click', btn_table_gm_click)
 
