@@ -29,7 +29,7 @@ function create_select_GM_3() {
         return;
     }
     
-    select_VV = create_select_search(EXPLOSIVE_NAMES, parent.clientWidth);
+    select_VV = create_select_search(EXPLOSIVE_NAMES, parent.clientWidth);  //создание строки поиска
     parent.append(select_VV)
 
     //находим пустую строку
@@ -329,8 +329,7 @@ function btn_k8_change (k) {
         // отдельная история !!!!!. Смеси, отдельный кадр?
         //переходим к кадру 9
         /////////////////////////////////// вот тут работаем по долям!!!
-        goto(k_9) // сделать без перехода!!??
-        console.log(current_gm)
+        goto(k_9) // сделать без перехода!!?
     }
    
     if (current_gm[9] == 'лвж') block_k8_tv.hidden = false

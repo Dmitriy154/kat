@@ -77,7 +77,7 @@ document.head.appendChild(style)
 
 //внимание! если передаем массив, значит в нем уже вещества из БД, если одно в-во, то или пользовательское или из БД
 function add_gm_in_table(arr) {
-    let arr_add_gm =[] //массив добавляемых взрывоопасных веществ
+    arr_GM_vz.length = 0
     let user_gm = false
     empty_row.hidden = true //скрываем первую пустую строку
 
@@ -121,13 +121,12 @@ function add_gm_in_table(arr) {
                 const compressed = GM.find(innerArray => innerArray[0] === name);
                 if (compressed) {
                     const full = decompressSubstance(compressed); // ← раскодируем!
-                    arr_add_gm.push(full);
                     arr_GM_vz.push(full);
                 }
             } 
         }
     })
-    add_row_in_table(arr_add_gm)  //добавляем строку в таблицу, обходя массив
+    add_row_in_table(arr_GM_vz)  //добавляем строку в таблицу, обходя массив
 } 
 
 //дополнение функции add_gm_in_table
@@ -756,10 +755,9 @@ const data_z_b2 = {
 
 //k_9 ВВОД компонентов в составе смеси
 
-const parent_komp = document.getElementById('div_seach_vv_komp');
 
-// Создаем select только после загрузки данных
-let select_VV_komp = null;
+const parent_komp = document.getElementById('div_seach_vv_komp');
+let select_VV_komp, head_table_komp, empty_row_komp, t_row_komp; //элементы поиска и таблицы 9-го кадра (чтобы был доступ)
 
 function initSelectKomp() {
     if (!EXPLOSIVE_NAMES || !Array.isArray(EXPLOSIVE_NAMES)) {
@@ -772,48 +770,48 @@ function initSelectKomp() {
     parent_komp.append(select_VV_komp);
     
     //находим пустую строку
-    let head_table_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[0];
-    let empty_row_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[1];
-    
-    let t_row_komp = empty_row_komp.cloneNode(true);
+    head_table_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[0];
+    empty_row_komp = row_title_for_VV_komp.querySelectorAll('div.col-md-9')[1];
+    t_row_komp = empty_row_komp.cloneNode(true);
     
     //кнопка добавить выбранные или пользовательские компоненты
     let btn_add_gm_komp = select_VV_komp.querySelector('button');
     
     btn_add_gm_komp.onclick = ()=> {
-    alert('нажата кнопка добавление компонента!')
-    let div_sel = select_VV_komp.querySelector('div.mark_element')  //div с выбранными элементами
-    
-    let arr = [] //массив имен выбранных веществ
-    if(div_sel.children.length) { 			//если есть выбранные элементы
+        alert('нажата кнопка добавление компонента!')
+        let div_sel = select_VV_komp.querySelector('div.mark_element')  //div с выбранными элементами
         
-        for(let d of div_sel.children) {
-            arr.push(d.children[1].textContent)
+        let arr = [] //массив имен выбранных веществ
+
+        if(div_sel.children.length) { 			//если есть выбранные элементы
+            
+            for(let d of div_sel.children) {
+                arr.push(d.children[1].textContent)
+            }
+
+        } else {                                
+            //добавляем пользовательские ГМ
+            let _inp = select_VV_komp.querySelector('input.search_input')
+            if (_inp.value == '') return 
+            arr[0] = _inp.value
         }
 
-    } else {                                
-        //добавляем пользовательские ГМ
-        let _inp = select_VV_komp.querySelector('input.search_input')
-        if (_inp.value == '') return 
-        arr[0] = _inp.value
-    }
+        add_gm_in_table_komp(arr) //функция добавления добавленных веществ в таблицу
 
-    add_gm_in_table_komp(arr) //функция добавления добавленных веществ в таблицу
+        select_VV_komp.querySelector('span.btn_clear').click() //иммитируем клик по крестику (очистить)
 
-    select_VV_komp.querySelector('span.btn_clear').click() //иммитируем клик по крестику (очистить)
-
-    //очищаем div_sel путем скликивания выбранных материалов: клик по крестику и скликивание. Очистка массива с конца массива
-    for (var i = div_sel.children.length - 1; i >= 0; i--) {
-        div_sel.children[i].querySelector('input').click()
-    }
+        //очищаем div_sel путем скликивания выбранных материалов: клик по крестику и скликивание. Очистка массива с конца массива
+        for (var i = div_sel.children.length - 1; i >= 0; i--) {
+            div_sel.children[i].querySelector('input').click()
+        }
     }
 }
 
 
 //передаем массив имен arr. функция формирует необходимые для добавления массив
 function add_gm_in_table_komp(arr) {
-    let arr_add_gm =[] //массив добавляемых взрывоопасных веществ
     let user_gm = false
+    arr_GM_komp.length = 0
     empty_row_komp.hidden = true //скрываем первую пустую строку
 
 
@@ -827,17 +825,67 @@ function add_gm_in_table_komp(arr) {
             
             new_row.querySelector('div.name').textContent = arr[0] //устанавливаем имя компонента
 
-        } else {    //вещество есть в GM
+            if (!arr_GM_komp.some(item => item[0] === name)) { //добавляем пользовательское вещество в массив arr_GM_komp не дублируя его
+                let add_arr = [name]
+                arr_GM_komp.push(add_arr)
+            }
 
+        } else {    //вещество есть в GM
+            if (arr_GM_komp.some(innerArray => innerArray[0] === name)) { //вещество есть в arr_GM_komp
+                //пропускаем
+            } else {                                                    //вещества нет в arr_GM_komp
+                const compressed = GM.find(innerArray => innerArray[0] === name);
+                if (compressed) {
+                    const full = decompressSubstance(compressed); // ← раскодируем!
+                    arr_GM_komp.push(full);
+                }
+            } 
         }
-    })       
+    })    
+    
+    add_row_in_table_9(arr_GM_komp)  //добавляем строку в таблицу кадра 9, обходя массив
 } 
 
+    
 
+//дополнение функции add_gm_in_table
+function add_row_in_table_9 (arr) {
 
- 
+    arr.forEach(gm => {
+        let new_row = t_row_komp.cloneNode(true)
+        row_title_for_VV_komp.append(new_row)
+        new_row.querySelector('div.name').textContent = gm[0]
 
+        //инпуты
+        gm.mass_dolya = new_row.querySelector('input.dolya')
+        gm.mol_massa = new_row.querySelector('input.init')
+        gm.p_np = new_row.querySelector('input.p_np')
+        
+        //ссылка на input в таблице с массой
+        gm.inp_massa = inp_massa
+        
+        let btn = new_row.querySelector('button')
+        //btn.addEventListener('click', btn_table_gm_click)
 
+    })
+}
 
+k9_btn_clear_table.onclick = ()=> {
+    //удаляем все видимые строки + отображаем ранее скрытую строку
+    row_title_for_VV_komp.innerHTML= ''
+    
+    row_title_for_VV_komp.append(head_table_komp)
+    row_title_for_VV_komp.append(empty_row_komp)
+    head_table_komp.hidden = empty_row_komp.hidden = false
+    arr_GM_komp.length = 0 //очищаем массив выбранных взрывоопасных материалов и все ссылки на него
+}
 
-
+function del_row_in_table_komp(row){
+    if (row_title_for_VV_komp.querySelectorAll('div.col-md-9')[3] == undefined){ // осталась последняя (или первая строка), которую нельзя удалять
+        k9_btn_clear_table.click()
+    } else {  
+        let name = row.querySelector('.name').textContent;      //находим имя гор. материала в удаляемой строке
+        arr_GM_komp = arr_GM_komp.filter(gm => gm[0] !== name);     //удаляем из массива 
+        row.remove()
+    }
+}

@@ -144,7 +144,7 @@ function goto (k_id) {
 	// Инициализация поиска для кадра 9 при переходе на него
 	if (k_id == k_9) {
 		if (typeof initSelectKomp === 'function') {
-			initSelectKomp();
+			initSelectKomp(); //создаем строку поиска таким образом, т.к. данные не сразу подгужены
 		}
 	}
 
