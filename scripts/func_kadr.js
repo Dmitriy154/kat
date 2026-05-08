@@ -34,33 +34,33 @@ function create_select_GM_3() {
 
     //находим пустую строку
     head_table = rowTitle.querySelectorAll('div.col-md-9')[0]  //первая строка таблицы с названиями столбцов
-
     empty_row = rowTitle.querySelectorAll('div.col-md-9')[1]
     t_row = empty_row.cloneNode(true)
 
-    //кнопка добавить выбранные или пользовательские ГМ
+    //кнопка "Добавить" выбранные или пользовательские ГМ
     let btn_add_gm = select_VV.querySelector('button')
 
-
+    //нажать кнопку Добавить
     btn_add_gm.onclick = ()=> {
         let div_sel = select_VV.querySelector('div.mark_element')
-        
+        let _inp = select_VV.querySelector('input.search_input')
+
         let arr = [] //массив имен выбранных веществ 
-        if(div_sel.children.length) { 			//если есть выбранные элементы
-            
+
+        if(div_sel.children.length) { 			//если есть выбранные элементы          
             for(let d of div_sel.children) {
                 arr.push(d.children[1].textContent)
             }
-
         } else {                                
             //добавляем пользовательские ГМ
-            let _inp = select_VV.querySelector('input.search_input')
-            if (_inp.value == '') return 
             arr[0] = _inp.value
         }
 
-        add_gm_in_table(arr) //добавляем в массив 
+        if (_inp.value.trim() === '') return;
+        _inp.value = ''; //очищаем строку поиска
 
+        add_gm_in_table(arr) //добавляем в массив 
+        
         select_VV.querySelector('span.btn_clear').click() //иммитируем клик по крестику (очистить)
 
         //очищаем div_sel путем скликивания выбранных материалов: клик по крестику и скликивание. Очистка массива с конца массива
@@ -70,6 +70,99 @@ function create_select_GM_3() {
     }
 }
 
+//внимание! если передаем массив, значит в нем уже вещества из БД, если одно в-во, то или пользовательское или из БД
+function add_gm_in_table(arr) {
+    let arr_add_gm =[] //массив добавляемых взрывоопасных веществ
+    let user_gm = false
+    empty_row.hidden = true //скрываем первую пустую строку
+
+    arr.forEach(name => {
+        // Проверяем, есть ли вещество в GM
+        if (!GM.some(innerArray => innerArray[0] === name)) {   //вещества нет в GM
+            console.log('добавляем пользовательский материал ' + arr[0])
+            let new_row = t_row.cloneNode(true)
+            row_title_for_VV.append(new_row)
+            new_row.querySelector('div.name').textContent = arr[0]
+            new_row.querySelector('div.data').innerHTML =`
+                <select onchange="this.gm[9] = this.value" class="form-select form-select-sm">
+                    <option value="0">Выбрать тип ГМ</option>
+                    <option value="гг">ГГ</option>
+                    <option value="лвж">ЛВЖ</option>
+                    <option value="гж">ГЖ</option>
+                    <option value="гп">ГП</option>
+                </select>
+            `
+
+            let inp_massa = new_row.querySelector('input[type="number"]')
+            inp_massa.classList.add('massa')
+
+            let btn = new_row.querySelector('button')
+            btn.addEventListener('click', btn_table_gm_click)
+            
+            if (!arr_GM_vz.some(item => item[0] === name)) { //добавляем пользовательское вещество в массив arr_GM_vz не дублируя его
+                let add_arr = [name]
+                
+                add_arr.inp_massa = inp_massa
+                add_arr.btn_1 = btn
+                arr_GM_vz.push(add_arr)
+                
+                new_row.querySelector('select').gm = add_arr //привязываем к селект ссылку на вещество и аттрибут onchange="this.gm[9] = this.value" 
+            }
+
+        } else {    //вещество есть в GM
+            if (arr_GM_vz.some(innerArray => innerArray[0] === name)) { //вещество есть в arr_GM_vz
+                //пропускаем
+            } else {                                                    //вещества нет в arr_GM_vz
+                const compressed = GM.find(innerArray => innerArray[0] === name);
+                if (compressed) {
+                    const full = decompressSubstance(compressed); // ← раскодируем!
+                    arr_add_gm.push(full);
+                    arr_GM_vz.push(full);
+                }
+            } 
+        }
+    })
+    add_row_in_table(arr_add_gm)  //добавляем строку в таблицу, обходя массив
+} 
+
+//дополнение функции add_gm_in_table
+function add_row_in_table (arr) {
+
+    arr.forEach(gm => {
+        let new_row = t_row.cloneNode(true)
+        row_title_for_VV.append(new_row)
+        new_row.querySelector('div.name').textContent = gm[0]
+
+        let inp_massa = new_row.querySelector('input[type="number"]')
+        inp_massa.classList.add('massa')
+
+        let div_data = new_row.querySelector('div.data')
+        div_data.textContent = gm[9] 
+        if (gm[8] !== '') div_data.textContent += ' (' + gm[8] + ')'
+        if (!isNaN(gm[1]) && gm[1] !== '0') {
+            div_data.textContent += ', индивидуальное вещество'
+        }
+        if (gm[1] == 's' || gm[2].includes('*')) {
+            div_data.textContent += ', смесь'
+        }
+        if (div_data.textContent != '') div_data.innerHTML = '<small>' + div_data.textContent +'</small>'
+        
+        //ссылка на input в таблице с массой
+        gm.inp_massa = inp_massa
+        
+        //поиск ссылки в основном массиве arr_GM_vz
+        gm_arr = arr_GM_vz.find(subArray1 => 
+            subArray1.length >= gm.length && 
+            gm.every((value, index) => value === subArray1[index])
+        );
+        
+        let btn = new_row.querySelector('button')
+        btn.addEventListener('click', btn_table_gm_click)
+        
+        gm_arr.inp_massa = inp_massa
+        gm_arr.btn_1 = btn
+    })
+}
 
 function del_row_in_table_gm(row){
     if (row_title_for_VV.querySelectorAll('div.col-md-9')[3] == undefined){ // осталась последняя (или первая строка), которую нельзя удалять
@@ -81,7 +174,19 @@ function del_row_in_table_gm(row){
     }
 }
 
+//кнопка "х" удаляем строки
+k3_btn_clear_table.onclick = ()=> {
+    //удаляем все видимые строки + отображаем ранее скрытую строку
+    row_title_for_VV.innerHTML= ''
+    
+    row_title_for_VV.append(head_table)
+    row_title_for_VV.append(empty_row)
+    head_table.hidden = empty_row.hidden = false
+    arr_GM_vz.length = 0 //очищаем массив выбранных взрывоопасных материалов и все ссылки на него
+}
 
+
+//проверка заполнения таблицы кадра 3
 function check_table_type() {
     // Находим все селекты внутри таблицы в текущий момент
     const selects = document.querySelectorAll('#row_title_for_VV select');
@@ -101,6 +206,7 @@ function check_table_type() {
     }
     return true; // Все селекты заполнены корректно
 }
+
 
 
 
